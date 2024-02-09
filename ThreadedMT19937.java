@@ -5,6 +5,7 @@ import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ThreadedMT19937 {
 
@@ -15,29 +16,26 @@ public class ThreadedMT19937 {
     }
 
     private double[] generate(int n) throws InterruptedException {
-        List<Double> ans = new ArrayList<>();
+        double[] ans = new double[n];
         
         int numThreads = 10;
         ExecutorService service = Executors.newFixedThreadPool(numThreads);
-
+        AtomicInteger idx = new AtomicInteger();
         for (int i = 0; i < numThreads; i++) {
             int numGen = n / numThreads + (i == 0 ? n % numThreads : 0);
             service.execute(() -> {
                 int threadId = (int) Thread.currentThread().getId();
                 MT19937 rand = new MT19937(seed ^ threadId);
-                List<Double> nums = rand.generate(numGen);
-                synchronized(this) {
-                    ans.addAll(nums);
+                double[] nums = rand.generate(numGen);
+                int localIdx = idx.getAndAdd(numGen);
+                for (int l = 0; l < numGen; l++) {
+                    ans[localIdx + l] = nums[l];
                 }
             });
         }
         service.shutdown();
         service.awaitTermination(5, TimeUnit.SECONDS);
-        double[] ret = new double[n];
-        for (int i = 0; i < n; i++) {
-            ret[i] = ans.get(i);
-        }
-        return ret;
+        return ans;
     }
 
     private class MT19937 {
@@ -84,18 +82,18 @@ public class ThreadedMT19937 {
             return y ^ (y >> 18);
         }
     
-        public List<Double> generate(int k) {
-            List<Double> ans = new ArrayList<>();
+        public double[] generate(int k) {
+            double[] ans = new double[k];
     
             while(k-- > 0) {
                 int xn = temper();
                 double un = 0;
                 for (int i = 0; i < 32; i++) {
                     int z = xn & 1;
-                    xn = xn >> 1;
-                    un += z * Math.pow(2, -i - 1);
+                    xn >>>= 1;
+                    un += z * (1.0 / (1 << (i + 1)));
                 }
-                ans.add(un);
+                ans[ans.length - k - 1] = un;
             }
             return ans;
         }
