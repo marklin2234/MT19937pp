@@ -1,17 +1,15 @@
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class ThreadedMT19937 {
+public class MT19937pp {
 
     private int seed;
 
-    public ThreadedMT19937(int seed) {
+    public MT19937pp(int seed) {
         this.seed = seed;
     }
 
@@ -92,6 +90,7 @@ public class ThreadedMT19937 {
                     int z = xn & 1;
                     xn >>>= 1;
                     un += z * (1.0 / (1 << (i + 1)));
+                    // un += z * Math.pow(2, -i - 1);
                 }
                 ans[ans.length - k - 1] = un;
             }
@@ -102,11 +101,9 @@ public class ThreadedMT19937 {
     public static void main(String[] args) throws InterruptedException {
         Scanner sc = new Scanner(System.in);
         // Prompt user
-        System.out.println("Seed: ");
         int seed = sc.nextInt();
-        System.out.println("How many PRNs? ");
         int n = sc.nextInt();
-        ThreadedMT19937 prng = new ThreadedMT19937(seed);
+        MT19937pp prng = new MT19937pp(seed);
         long start = System.currentTimeMillis();
         double[] nums = prng.generate(n);
         long end = System.currentTimeMillis();
