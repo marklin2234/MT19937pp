@@ -23,7 +23,7 @@ public class MT19937pp {
             int numGen = n / numThreads + (i == 0 ? n % numThreads : 0);
             service.execute(() -> {
                 int threadId = (int) Thread.currentThread().getId();
-                MT19937 rand = new MT19937(seed ^ threadId);
+                MT19937 rand = new MT19937(seed ^ (idx.get() + 0x423AB90));
                 double[] nums = rand.generate(numGen);
                 int localIdx = idx.getAndAdd(numGen);
                 for (int l = 0; l < numGen; l++) {
